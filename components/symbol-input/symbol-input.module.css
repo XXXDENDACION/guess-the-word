@@ -1,0 +1,12 @@
+.symbolInput {
+    border: 1px solid #8b8787;
+    margin: 5px;
+    height: 50px;
+    width: 50px;
+    font-size: 38px;
+    padding: 0;
+    text-align: center;
+    caret-color: transparent;
+    user-select: none;
+    text-transform: uppercase;
+}
