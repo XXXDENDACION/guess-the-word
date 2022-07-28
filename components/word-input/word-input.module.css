@@ -1,0 +1,38 @@
+.wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.completeButton {
+    margin-left: 25px;
+    opacity: 0;
+}
+
+.completeButton:disabled {
+    cursor: default;
+}
+
+.completeButtonVisible {
+    opacity: 1;
+}
+
+.competeButtonWrapper {
+    position: absolute;
+}
+
+.symbolInput {
+
+}
+
+.symbolInputCorrect {
+    background-color: green;
+}
+
+.symbolInputIncorrect {
+    background-color: orange;
+}
+
+.symbolInputNotExist {
+
+}

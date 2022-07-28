@@ -1,17 +1,35 @@
 import { ChangeEvent, KeyboardEvent, memo, useEffect, useState } from 'react';
 
 import { useCallback, useRef } from 'react'
+import cn from "classnames";
+import { CompleteButton } from '../complete-button/complete-button';
 import SymbolInput from '../symbol-input/symbol-input';
 
-import type { FC } from 'react';
+import styles from "./word-input.module.css";
 
 const regularExpression = /^[а-я]*$/;
 
-interface IInputValues {
-    [index: string]: string;
+enum StatusCharacter {
+  correctPlace = "correctPlace",
+  incorrectPlace = "incorrectPlace",
+  noExist = "noExist",
+  notInputed = "noInputed"
 }
 
-const WordInput: FC = () => {
+interface IInputValues {
+  [index: string]: string;
+}
+
+interface IStatusValues {
+  [index: string]: StatusCharacter;
+}
+
+interface IWordInputProps {
+  blocked?: boolean;
+  currentWord: string;
+}
+
+const WordInput = ({ blocked, currentWord }: IWordInputProps) => {
     const [inputValues, setInputValues] = useState<IInputValues>({
         "0": "",
         "1": "",
@@ -19,7 +37,15 @@ const WordInput: FC = () => {
         "3": "",
         "4": ""
     });
+    const [statusInputValues, setStatusInputValues] = useState<IStatusValues>({
+        "0": StatusCharacter.notInputed,
+        "1": StatusCharacter.notInputed,
+        "2": StatusCharacter.notInputed,
+        "3": StatusCharacter.notInputed,
+        "4": StatusCharacter.notInputed
+  });
     const [lastInputedIndex, setLastInputedIndex] = useState<number>(-1);
+    const [isVisibleCompleteButton, setIsVisibleCompleteButton] = useState(false);
     const symbolsRef = useRef(new Array());
 
     const onChangeInput = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +67,7 @@ const WordInput: FC = () => {
       }
 
       const inputId = parseInt(e.target.id);
-      
+
       if (symbolsRef.current[inputId].value === "" && e.key === "Backspace") {
           if (inputId - 1 >= 0) {
             setInputValues((prevState) => ({...prevState, [inputId-1]: ""}))
@@ -53,6 +79,32 @@ const WordInput: FC = () => {
     const handleOnlyRussianSymbol = (value: string) => {
         return !!value.match(regularExpression);
     }
+
+    const submitWord = () => {
+      const newStatusValues = {...statusInputValues};
+      Object.values(inputValues).forEach((value, index) => {
+        if (value === currentWord[index]) {
+          return newStatusValues[index] = StatusCharacter.correctPlace;
+        }
+
+        if (currentWord.includes(value)) {
+          console.log(inputValues, value);
+          return newStatusValues[index] = StatusCharacter.incorrectPlace;
+        }
+
+        newStatusValues[index] = StatusCharacter.noExist;
+      })
+      setStatusInputValues(newStatusValues);
+    }
+
+    useEffect(() => {
+      const inputedWord = Object.values(inputValues).join('');
+      if (inputedWord.length === 5) {
+        return setIsVisibleCompleteButton(true);
+      }
+
+      setIsVisibleCompleteButton(false);
+    }, [inputValues])
   
     useEffect(() => {
       const onKeyDown = () => {
@@ -76,17 +128,35 @@ const WordInput: FC = () => {
     }, [lastInputedIndex, inputValues])
   
     return (
-      <div>
-        {Object.keys(inputValues).map((item, index) => 
-          <SymbolInput 
-            id={item}
-            ref={(el) => symbolsRef.current[index] = el} 
-            value={inputValues[item]}
-            key={index} 
-            onChange={onChangeInput} 
-            onKeyDownInput={onKeyDownInput}
-          /> 
-        )}
+      <div className={styles.wrapper}>
+        <div>
+          {Object.keys(inputValues).map((item, index) => 
+            <SymbolInput 
+              id={item}
+              ref={(el) => symbolsRef.current[index] = el} 
+              value={inputValues[item]}
+              key={index} 
+              onChange={onChangeInput} 
+              onKeyDownInput={onKeyDownInput}
+              blocked={blocked || statusInputValues[index] !== StatusCharacter.notInputed}
+              className={cn(
+                styles.symbolInput, 
+                {
+                  [styles.symbolInputCorrect]: statusInputValues[index] === StatusCharacter.correctPlace,
+                  [styles.symbolInputIncorrect]: statusInputValues[index] === StatusCharacter.incorrectPlace,
+                  [styles.symbolInputNotExist]: statusInputValues[index] === StatusCharacter.noExist,
+                }
+            )}
+            /> 
+          )}
+        </div>
+        <div className={styles.completeButtonWrapper}>
+          <CompleteButton 
+            disabled={!isVisibleCompleteButton} 
+            className={cn(styles.completeButton, { [styles.completeButtonVisible]: isVisibleCompleteButton })} 
+            onClick={submitWord} 
+            />
+        </div>
       </div>
     )
 }
