@@ -22,17 +22,17 @@
 }
 
 .symbolInput {
-
+    /* background-color: #787c7f; */
 }
 
 .symbolInputCorrect {
-    background-color: green;
+    background-color: #6baa64;
 }
 
 .symbolInputIncorrect {
-    background-color: orange;
+    background-color: #c9b458;
 }
 
 .symbolInputNotExist {
-
+    background-color: #787c7f;
 }

@@ -27,9 +27,12 @@ interface IStatusValues {
 interface IWordInputProps {
   blocked?: boolean;
   currentWord: string;
+  handleSetLastInputedWord: (word: string) => void;
+  nextStep: () => void;
+  handleSetErrorMessage: (error: string) => void;
 }
 
-const WordInput = ({ blocked, currentWord }: IWordInputProps) => {
+const WordInput = ({ blocked, currentWord, nextStep, handleSetLastInputedWord, handleSetErrorMessage }: IWordInputProps) => {
     const [inputValues, setInputValues] = useState<IInputValues>({
         "0": "",
         "1": "",
@@ -80,22 +83,34 @@ const WordInput = ({ blocked, currentWord }: IWordInputProps) => {
         return !!value.match(regularExpression);
     }
 
-    const submitWord = () => {
-      const newStatusValues = {...statusInputValues};
-      Object.values(inputValues).forEach((value, index) => {
-        if (value === currentWord[index]) {
-          return newStatusValues[index] = StatusCharacter.correctPlace;
-        }
+    const submitWord = useCallback(async () => {
 
-        if (currentWord.includes(value)) {
-          console.log(inputValues, value);
-          return newStatusValues[index] = StatusCharacter.incorrectPlace;
-        }
-
-        newStatusValues[index] = StatusCharacter.noExist;
+      const response = await fetch('/api/sendWord', {
+        method: "POST",
+        body: JSON.stringify(Object.values(inputValues).join(''))
       })
-      setStatusInputValues(newStatusValues);
-    }
+      const responseResolved = await response.json();
+
+      if (responseResolved?.hasWord) {
+        const newStatusValues = {...statusInputValues};
+        Object.values(inputValues).forEach((value, index) => {
+          if (value === currentWord[index]) {
+            return newStatusValues[index] = StatusCharacter.correctPlace;
+          }
+
+          if (currentWord.includes(value)) {
+            return newStatusValues[index] = StatusCharacter.incorrectPlace;
+          }
+
+          newStatusValues[index] = StatusCharacter.noExist;
+        })
+        setStatusInputValues(newStatusValues);
+        handleSetLastInputedWord(Object.values(inputValues).join(''));
+        nextStep();
+      } else {
+        handleSetErrorMessage("Такого слова нет в словаре игры!")
+      }
+    }, [currentWord, handleSetErrorMessage, handleSetLastInputedWord, inputValues, nextStep, statusInputValues])
 
     useEffect(() => {
       const inputedWord = Object.values(inputValues).join('');
@@ -107,26 +122,32 @@ const WordInput = ({ blocked, currentWord }: IWordInputProps) => {
     }, [inputValues])
   
     useEffect(() => {
-      const onKeyDown = () => {
-        const countSymbols = Object.keys(inputValues).length;
-        if (Object.keys(inputValues).map(index => symbolsRef.current[parseInt(index)]).includes(document.activeElement)) {
-          return;
-        }
-        if (lastInputedIndex + 1 >= countSymbols) {
-          return symbolsRef.current[lastInputedIndex]?.focus();
-        }
-        if (lastInputedIndex < 0) {
-          return symbolsRef.current[0]?.focus();
-        }
+      const onKeyDown = (e: any) => {
+        if (!blocked) {
+          if (Object.values(inputValues).join('').length === 5 && e.key === "Enter") {
+            submitWord();
+          }
 
-        symbolsRef.current[lastInputedIndex + 1]?.focus();
+          const countSymbols = Object.keys(inputValues).length;
+          if (Object.keys(inputValues).map(index => symbolsRef.current[parseInt(index)]).includes(document.activeElement)) {
+            return;
+          }
+          if (lastInputedIndex + 1 >= countSymbols) {
+            return symbolsRef.current[lastInputedIndex]?.focus();
+          }
+          if (lastInputedIndex < 0) {
+            return symbolsRef.current[0]?.focus();
+          }
+
+          symbolsRef.current[lastInputedIndex + 1]?.focus();
+        }
       }
   
       window.addEventListener('keydown', onKeyDown);
   
       return () => window.removeEventListener('keydown', onKeyDown);
-    }, [lastInputedIndex, inputValues])
-  
+    }, [lastInputedIndex, inputValues, submitWord, blocked])
+
     return (
       <div className={styles.wrapper}>
         <div>
@@ -149,13 +170,6 @@ const WordInput = ({ blocked, currentWord }: IWordInputProps) => {
             )}
             /> 
           )}
-        </div>
-        <div className={styles.completeButtonWrapper}>
-          <CompleteButton 
-            disabled={!isVisibleCompleteButton} 
-            className={cn(styles.completeButton, { [styles.completeButtonVisible]: isVisibleCompleteButton })} 
-            onClick={submitWord} 
-            />
         </div>
       </div>
     )
