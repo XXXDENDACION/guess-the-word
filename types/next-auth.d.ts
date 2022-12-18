@@ -6,10 +6,12 @@ import NextAuth, {
     CallbacksOptions
 } from "next-auth"
 import JWT from "next-auth/jwt";
+import { UserMeData } from "@interfaces/user";
 
 declare module "next-auth/jwt" {
     interface JWT {
         accessToken: string;
+        graphql: UserMeData;
     }
 }
 

@@ -8,4 +8,5 @@ export interface UserData {
 export interface UserMeData extends UserData {
     accessToken: string;
     refreshToken: string;
+    exp?: number | string;
 }

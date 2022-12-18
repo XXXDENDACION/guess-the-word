@@ -4,8 +4,11 @@ import { GameArea } from '../components/game-area/game-area';
 import styles from '../styles/Home.module.css';
 import { getAuthSession } from '../server/common/get-server-session';
 import { useState } from 'react';
+import {useSession} from "next-auth/react";
 
 const Home: NextPage = (props) => {
+  const { data: session } = useSession();
+  console.log(session);
   const [word, setWord] = useState<string>();
   const getWord = async () => {
     const response = await fetch('/api/words');
