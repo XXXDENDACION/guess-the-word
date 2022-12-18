@@ -1,0 +1,10 @@
+:root {
+    --empty-input-bg-color: #E7EFF6;
+    --empty-input-color: #E7EFF6;
+    --correct-input-bg-color: #02C39A;
+    --correct-input-color: #1D6B55;
+    --incorrect-input-bg-color: linear-gradient(135deg, #D9B952 0%, #FDD85D 100%);
+    --incorrect-input-color: #837035;
+    --not-exist-input-bg-color: linear-gradient(135deg, #2D3047 0%, #48495F 100%);
+    --not-exist-input-color: #A3A3AE;
+}

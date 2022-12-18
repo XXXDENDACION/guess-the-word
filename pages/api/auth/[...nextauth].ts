@@ -18,11 +18,19 @@ export const refreshAccessToken = async (token: JWT) => {
     const { data } = await apolloClient.query({
       query: RefreshAccessTokenDocument,
       variables: {
-        refreshToken: token.refreshToken
+        refreshToken: token.graphql.refreshToken
       }
     })
+
+    const payload = await verifyJWT(String(data.refresh.accessToken));
+    const expirationToken = (typeof payload === 'string') ? new Date().getTime() : payload.exp;
     return {
-      ...data.refresh
+      ...token,
+      graphql: {
+        ...token.graphql,
+        ...data.refresh,
+        exp: expirationToken
+      }
     }
   } catch (err) {
     return {
@@ -97,7 +105,6 @@ export const authOptions: NextAuthOptions = {
           }
 
           const { exp = 0 } = token.graphql as JwtPayload;
-
           if (dayjs().unix() < exp) return token;
 
           // Refresh token from custom backend when accessToken is invalid

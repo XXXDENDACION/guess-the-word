@@ -19,7 +19,7 @@ const Home: NextPage = (props) => {
 
   return (
     <div className={styles.home}>
-      {!word && <button className={styles.buttony} onClick={getWord}>Загадать слово</button>}
+      {!word && <button className={styles.button} onClick={getWord}>Загадать слово</button>}
       {word && <GameArea currentWord={word || ''} />}
     </div>
   )
